@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'; // Hapus useEffect dan useState
+import React, { useEffect, useMemo, useRef } from 'react'; // Tambahkan useRef
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
@@ -11,7 +11,6 @@ interface StandingsEntry { team_id: number; team_name: string; mp: number; w: nu
 
 // --- Komponen RankMedal (Tidak ada perubahan) ---
 const RankMedal = ({ rank }: { rank: number }) => {
-    // ... (kode sama seperti sebelumnya)
     if (rank === 1) { return <Trophy className="h-5 w-5 text-yellow-400" />; }
     if (rank >= 2 && rank <= 3) {
         const color = rank === 2 ? 'bg-slate-400' : 'bg-amber-600';
@@ -22,21 +21,17 @@ const RankMedal = ({ rank }: { rank: number }) => {
 
 // --- Komponen RankChangeIndicator (Tidak ada perubahan) ---
 const RankChangeIndicator = ({ oldRank, newRank }: { oldRank: number | undefined, newRank: number }) => {
-    // Jika tidak ada data peringkat lama (undefined), atau peringkatnya sama
     if (oldRank === undefined || oldRank === newRank) {
         return <Minus className="h-4 w-4 text-gray-500" />;
     }
-    // Jika peringkat baru lebih baik (lebih kecil)
     if (newRank < oldRank) {
         return <ArrowUp className="h-4 w-4 text-green-500" />;
     }
-    // Jika peringkat baru lebih buruk (lebih besar)
     return <ArrowDown className="h-4 w-4 text-red-500" />;
 };
 
 // --- Fungsi fetchData dan calculateStandings (Tidak ada perubahan) ---
 async function fetchData(): Promise<{ teams: Team[], matches: Match[] }> {
-    // ... (kode sama seperti sebelumnya)
     const { data: teams, error: teamsError } = await supabase.from('teams').select('*');
     if (teamsError) throw new Error(teamsError.message);
     const { data: matches, error: matchesError } = await supabase.from('matches').select('*');
@@ -45,7 +40,6 @@ async function fetchData(): Promise<{ teams: Team[], matches: Match[] }> {
 }
 
 function calculateStandings(teams: Team[], matches: Match[]): StandingsEntry[] {
-    // ... (kode sama seperti sebelumnya)
     const stats = new Map<number, StandingsEntry>(teams.map(t => [t.id, { team_id: t.id, team_name: t.name, mp: 0, w: 0, d: 0, l: 0, points: 0, gf: 0, ga: 0, gd: 0 }]));
     matches.forEach(m => {
         if (m.score1 === null || m.score2 === null) return;
@@ -61,14 +55,18 @@ function calculateStandings(teams: Team[], matches: Match[]): StandingsEntry[] {
     return Array.from(stats.values()).sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
 }
 
-
-// --- Komponen Utama StandingsTable (Dengan LOGIKA BARU) ---
+// ========================================================================
+// KOMPONEN UTAMA DENGAN LOGIKA YANG SUDAH DIPERBAIKI
+// ========================================================================
 const StandingsTable: React.FC = () => {
     const queryClient = useQueryClient();
     const { data, isLoading } = useQuery({ queryKey: ['standingsData'], queryFn: fetchData });
 
-    // Hapus useEffect untuk realtime, karena useQuery sudah menanganinya dengan invalidateQueries
-    React.useEffect(() => {
+    // Gunakan ref untuk menyimpan data klasemen sebelumnya
+    const previousStandingsRef = useRef<StandingsEntry[]>([]);
+
+    // Tetap gunakan listener realtime dari Supabase
+    useEffect(() => {
         const channel = supabase.channel('realtime-matches')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, 
             () => { queryClient.invalidateQueries({ queryKey: ['standingsData'] }); })
@@ -76,35 +74,27 @@ const StandingsTable: React.FC = () => {
         return () => { supabase.removeChannel(channel); };
     }, [queryClient]);
 
-    // ========================================================================
-    // LOGIKA UTAMA ADA DI SINI
-    // ========================================================================
-    const { currentStandings, previousStandingsMap } = useMemo(() => {
-        if (!data) {
-            return { currentStandings: [], previousStandingsMap: new Map() };
-        }
-
-        // 1. Hitung klasemen saat ini dengan semua data pertandingan
-        const currentStandings = calculateStandings(data.teams, data.matches);
-
-        // 2. Cari tahu matchday terbaru
-        const latestMatchday = Math.max(0, ...data.matches.map(m => m.matchday));
-        
-        // 3. Filter pertandingan untuk mendapatkan data "sebelumnya"
-        const previousMatches = data.matches.filter(m => m.matchday < latestMatchday);
-        
-        // 4. Hitung klasemen "sebelumnya"
-        const previousStandings = calculateStandings(data.teams, previousMatches);
-        
-        // 5. Buat Map untuk mencari peringkat lama dengan cepat (id_tim -> peringkat)
-        const previousStandingsMap = new Map<number, number>();
-        previousStandings.forEach((team, index) => {
-            previousStandingsMap.set(team.team_id, index);
-        });
-
-        return { currentStandings, previousStandingsMap };
-
+    // Hitung klasemen saat ini
+    const currentStandings = useMemo(() => {
+        return data ? calculateStandings(data.teams, data.matches) : [];
     }, [data]);
+
+    // Buat Map dari klasemen sebelumnya untuk pencarian yang cepat
+    const previousStandingsMap = useMemo(() => {
+        const map = new Map<number, number>();
+        previousStandingsRef.current.forEach((team, index) => {
+            map.set(team.team_id, index);
+        });
+        return map;
+    }, [previousStandingsRef.current]);
+
+    // Setelah render selesai, update ref dengan klasemen saat ini
+    // untuk digunakan pada render berikutnya
+    useEffect(() => {
+        if (currentStandings.length > 0) {
+            previousStandingsRef.current = currentStandings;
+        }
+    }); // <-- Tidak ada dependency array agar selalu berjalan setelah setiap render
 
     if (isLoading) return <div className="p-4 text-center">Loading...</div>;
 
@@ -126,7 +116,7 @@ const StandingsTable: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                     {currentStandings.map((team, index) => {
-                        // Ambil peringkat lama dari Map yang sudah dibuat
+                        // Ambil peringkat lama dari Map
                         const oldRank = previousStandingsMap.get(team.team_id);
                         const newRank = index;
 
@@ -135,6 +125,7 @@ const StandingsTable: React.FC = () => {
                                 <TableCell className="font-medium">
                                   <div className="flex items-center justify-center gap-2">
                                     <RankMedal rank={newRank + 1} />
+                                    {/* Gunakan RankChangeIndicator dengan data yang benar */}
                                     <RankChangeIndicator oldRank={oldRank} newRank={newRank} />
                                   </div>
                                 </TableCell>
