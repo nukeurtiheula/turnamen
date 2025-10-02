@@ -45,7 +45,7 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 
 // GANTI LAGI KOMPONEN MatchCard DENGAN VERSI FINAL INI
 // ========================================================================
-// KOMPONEN MatchCard (SYMMETRICAL & PROPORTIONAL LAYOUT)
+// KOMPONEN MatchCard (CENTERED DATE WITH DAY NAME)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -59,19 +59,25 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
 
   return (
     <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
-      {/* Header Kartu (Tidak ada perubahan) */}
-      <div className="flex justify-between items-center mb-4">
+      
+      {/* Header Kartu: Hanya berisi Badge Status */}
+      {/* Margin bottom dikurangi karena tanggal akan mengisi ruang */}
+      <div className="flex justify-between items-center mb-2">
         <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
           {isFinished ? 'Selesai' : 'Akan Datang'}
         </Badge>
-        {match.match_timestamp && (
-          <div className="text-xs text-slate-400">
-            {format(parseISO(match.match_timestamp), 'dd MMM, HH:mm', { locale: id })}
-          </div>
-        )}
       </div>
 
-      {/* Konten Utama: Layout Tiga Kolom yang Stabil */}
+      {/* ============================================================ */}
+      {/* PERUBAHAN DI SINI: Tanggal dipindahkan ke tengah dan format diubah */}
+      {/* ============================================================ */}
+      {match.match_timestamp && (
+        <div className="text-center text-xs text-slate-400 mb-3">
+          {format(parseISO(match.match_timestamp), 'eeee, dd MMMM yyyy - HH:mm', { locale: id })}
+        </div>
+      )}
+
+      {/* Konten Utama: Layout Tiga Kolom yang Stabil (Tidak ada perubahan) */}
       <div className="flex items-center">
         
         {/* Kolom 1: Tim 1 (Fleksibel) */}
