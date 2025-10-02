@@ -32,11 +32,22 @@ interface Match {
 async function getMatchesWithTeams(): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
-    .select(`*, team1:teams!team1_id(name, logo_url), team2:teams!team2_id(name, logo_url)`)
+    .select(`
+      *,
+      team1:team1_id(name, logo_url),
+      team2:team2_id(name, logo_url)
+    `)
     .order('matchday')
     .order('id');
-  if (error) throw error;
-  return data.map(m => ({ ...m, teams: [m.team1, m.team2] })) as Match[];
+    
+  if (error) {
+    console.error("Error fetching matches:", error); // Tambahkan ini untuk debugging
+    throw error;
+  }
+  
+  // Sekarang data akan kembali dengan format { ..., team1: {name: '...'}, team2: {name: '...'} }
+  // Kita perlu menyesuaikan sedikit cara kita memetakannya
+  return data.map(m => ({ ...m, teams: [m.team1 as Team, m.team2 as Team] })) as Match[];
 }
 
 // ========================================================================
