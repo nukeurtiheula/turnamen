@@ -43,9 +43,9 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 }
 
 
-// GANTI LAGI KOMPONEN MatchCard DENGAN VERSI BARU INI
+// GANTI LAGI KOMPONEN MatchCard DENGAN VERSI FINAL INI
 // ========================================================================
-// KOMPONEN MatchCard (NAMA TIM MUNCUL DI MOBILE)
+// KOMPONEN MatchCard (DYNAMIC WIDTH FOR SCORE)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -72,39 +72,43 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
       </div>
 
       {/* Konten Utama: Tim vs Tim */}
-      <div className="flex items-center justify-between gap-2">
+      {/* LOGIKA KONDISIONAL BARU: justify-center vs justify-between */}
+      <div className={`flex items-center gap-2 sm:gap-4 ${isFinished ? 'justify-between' : 'justify-center'}`}>
         
         {/* Tim 1 */}
-        {/* Memberi lebar w-2/5 di semua ukuran layar */}
-        <div className="flex items-center gap-2 sm:gap-3 w-2/5 justify-start">
+        {/* LOGIKA KONDISIONAL BARU: w-auto vs w-1/3 */}
+        <div className={`flex items-center gap-2 sm:gap-3 ${isFinished ? 'w-1/3' : 'w-auto'} justify-end ${!isFinished && 'flex-row-reverse'}`}>
           {team1?.logo_url ? (
-            <img src={team1.logo_url} alt={team1.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />
+            <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
           ) : (
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
-          {/* FONT SIZE: text-sm di mobile, sm:text-base di desktop */}
-          <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team1?.name}</span>
+          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
         </div>
 
         {/* Skor atau VS */}
-        <div className="text-center flex-shrink-0">
+        {/* LOGIKA KONDISIONAL BARU: Menambah lebar saat skor muncul */}
+        <div className={`text-center flex-shrink-0 ${isFinished ? 'w-1/3' : 'w-auto px-2'}`}>
           {isFinished ? (
-            <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
+            <div className='flex justify-center items-center gap-2 sm:gap-4'>
+                <span className="font-bold text-2xl sm:text-3xl text-white tracking-wider">{match.score1}</span>
+                <span className='text-slate-400 text-sm'>-</span>
+                <span className="font-bold text-2xl sm:text-3xl text-white tracking-wider">{match.score2}</span>
+            </div>
           ) : (
             <span className="text-sm font-normal text-slate-400">vs</span>
           )}
         </div>
 
         {/* Tim 2 */}
-        {/* Memberi lebar w-2/5 di semua ukuran layar */}
-        <div className="flex items-center gap-2 sm:gap-3 w-2/5 justify-end">
-          {/* FONT SIZE: text-sm di mobile, sm:text-base di desktop */}
-          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team2?.name}</span>
+        {/* LOGIKA KONDISIONAL BARU: w-auto vs w-1/3 */}
+        <div className={`flex items-center gap-2 sm:gap-3 ${isFinished ? 'w-1/3' : 'w-auto'} justify-start`}>
           {team2?.logo_url ? (
-            <img src={team2.logo_url} alt={team2.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />
+            <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
           ) : (
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
+          <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team2?.name}</span>
         </div>
       </div>
 
