@@ -129,10 +129,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
 
 
 // ========================================================================
-// KOMPONEN UTAMA: Schedule (DENGAN PENYESUAIAN MOBILE)
+// KOMPONEN UTAMA: Schedule (DENGAN PENYESUAIAN WARNA KONTEN)
 // ========================================================================
 const Schedule: React.FC = () => {
-    // ... Logika state dan query tidak berubah
+    // ... Logika state dan query tidak berubah ...
     const { data: matches = [], isLoading, isError, error } = useQuery<Match[]>({ queryKey: ['scheduleMatches'], queryFn: getMatchesWithTeams });
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
@@ -154,16 +154,19 @@ const Schedule: React.FC = () => {
         <>
             <Accordion type="single" collapsible className="w-full space-y-4">
                 {Object.entries(matchesByDay).map(([day, dayMatches]) => (
-                    <AccordionItem value={day} key={day} className="border border-slate-700/50 rounded-lg overflow-hidden bg-slate-900/30">
-                        {/* Padding & Text size lebih kecil di mobile */}
+                    // Warna dasar untuk seluruh item
+                    <AccordionItem value={day} key={day} className="border border-slate-700/50 rounded-lg overflow-hidden bg-[#1c2026]">
                         <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 transition-colors duration-200 hover:bg-slate-800/50">
                             <div className='flex justify-between w-full items-center'>
                                 <span className='font-bold text-md sm:text-lg text-white'>{day}</span>
-                                <span className='text-xs sm:text-sm text-slate-400 font-normal mr-2'>{dayMatches.length} Pertandingan</span>
+                                <span className='text-sm text-slate-400 font-normal mr-2'>{dayMatches.length} Pertandingan</span>
                             </div>
                         </AccordionTrigger>
-                        <AccordionContent className="bg-slate-900/20">
-                            {/* Padding lebih kecil di mobile */}
+                        
+                        {/* ================================================================== */}
+                        {/* PERUBAHAN DI SINI: Sesuaikan warna background konten */}
+                        {/* ================================================================== */}
+                        <AccordionContent className="bg-black/20">
                             <div className="p-2 sm:p-4 space-y-4">
                                 {dayMatches.map(match => (
                                     <MatchCard key={match.id} match={match} onSetTimeClick={() => setSelectedMatch(match)} />
