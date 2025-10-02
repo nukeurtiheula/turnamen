@@ -43,9 +43,9 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 }
 
 
-// GANTI KOMPONEN MatchCard LAMA DENGAN INI
+// GANTI LAGI KOMPONEN MatchCard DENGAN VERSI BARU INI
 // ========================================================================
-// KOMPONEN MatchCard (DENGAN TAMPILAN KIRI-KANAN DI MOBILE)
+// KOMPONEN MatchCard (NAMA TIM MUNCUL DI MOBILE)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -72,39 +72,38 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
       </div>
 
       {/* Konten Utama: Tim vs Tim */}
-      {/* Layout tetap flex-row, tapi dengan justify-between */}
       <div className="flex items-center justify-between gap-2">
         
         {/* Tim 1 */}
-        {/* sm:w-2/5 untuk memberikan ruang bagi nama tim di desktop */}
-        <div className="flex items-center gap-3 w-auto sm:w-2/5 justify-start">
+        {/* Memberi lebar w-2/5 di semua ukuran layar */}
+        <div className="flex items-center gap-2 sm:gap-3 w-2/5 justify-start">
           {team1?.logo_url ? (
-            <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 object-contain" />
+            <img src={team1.logo_url} alt={team1.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
-          {/* NAMA TIM: hidden di mobile, sm:block untuk desktop */}
-          <span className="font-bold text-white text-left truncate hidden sm:block">{team1?.name}</span>
+          {/* FONT SIZE: text-sm di mobile, sm:text-base di desktop */}
+          <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team1?.name}</span>
         </div>
 
         {/* Skor atau VS */}
         <div className="text-center flex-shrink-0">
           {isFinished ? (
-            <span className="font-bold text-xl sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
+            <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
           ) : (
             <span className="text-sm font-normal text-slate-400">vs</span>
           )}
         </div>
 
         {/* Tim 2 */}
-        {/* sm:w-2/5 untuk memberikan ruang bagi nama tim di desktop */}
-        <div className="flex items-center gap-3 w-auto sm:w-2/5 justify-end">
-          {/* NAMA TIM: hidden di mobile, sm:block untuk desktop */}
-          <span className="font-bold text-white text-right truncate hidden sm:block">{team2?.name}</span>
+        {/* Memberi lebar w-2/5 di semua ukuran layar */}
+        <div className="flex items-center gap-2 sm:gap-3 w-2/5 justify-end">
+          {/* FONT SIZE: text-sm di mobile, sm:text-base di desktop */}
+          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team2?.name}</span>
           {team2?.logo_url ? (
-            <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 object-contain" />
+            <img src={team2.logo_url} alt={team2.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
         </div>
       </div>
