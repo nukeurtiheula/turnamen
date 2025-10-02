@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" onClick={handleRefresh}>Refresh Klasemen</Button>
         <Button asChild variant="secondary">
-          <Link to="/admin">Halaman Admin</Link>
+          <Link to="/admin">Ruang Admin</Link>
         </Button>
       </div>
 
@@ -50,5 +50,6 @@ const HomePage: React.FC = () => {
     </div>
   );
 };
+
 
 export default HomePage;
