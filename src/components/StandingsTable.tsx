@@ -75,6 +75,8 @@ const StandingsTable: React.FC = () => {
                         <TableHead>Tim</TableHead>
                         <TableHead className="text-center">MP</TableHead>
                         <TableHead className="text-center">W</TableHead>
+                        {/* INI YANG DITAMBAHKAN */}
+                        <TableHead className="text-center">D</TableHead>
                         <TableHead className="text-center">L</TableHead>
                         <TableHead className="text-center">Poin</TableHead>
                         <TableHead className="text-center">Skor Set</TableHead>
@@ -90,6 +92,8 @@ const StandingsTable: React.FC = () => {
                             <TableCell className="font-semibold">{team.team_name}</TableCell>
                             <TableCell className="text-center">{team.mp}</TableCell>
                             <TableCell className="text-center text-green-500">{team.w}</TableCell>
+                            {/* INI YANG DITAMBAHKAN */}
+                            <TableCell className="text-center text-gray-400">{team.d}</TableCell>
                             <TableCell className="text-center text-red-500">{team.l}</TableCell>
                             <TableCell className="text-center font-bold text-lg">{team.points}</TableCell>
                             <TableCell className="text-center">{team.mp > 0 ? `${team.gf}-${team.ga}` : '0-0'}</TableCell>
