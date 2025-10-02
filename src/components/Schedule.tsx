@@ -43,8 +43,9 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 }
 
 
+// GANTI KOMPONEN MatchCard LAMA DENGAN INI
 // ========================================================================
-// KOMPONEN MatchCard (DENGAN PENYESUAIAN MOBILE)
+// KOMPONEN MatchCard (DENGAN TAMPILAN KIRI-KANAN DI MOBILE)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -57,9 +58,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
   const team2 = match.teams?.[1];
 
   return (
-    // Padding lebih kecil di mobile
     <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
-      {/* Header Kartu (Tidak banyak perubahan) */}
+      {/* Header Kartu (Tidak ada perubahan) */}
       <div className="flex justify-between items-center mb-3">
         <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
           {isFinished ? 'Selesai' : 'Akan Datang'}
@@ -72,41 +72,40 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
       </div>
 
       {/* Konten Utama: Tim vs Tim */}
-      {/* MOBILE: flex-col (ke bawah), DESKTOP: sm:flex-row (ke samping) */}
-      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+      {/* Layout tetap flex-row, tapi dengan justify-between */}
+      <div className="flex items-center justify-between gap-2">
         
         {/* Tim 1 */}
-        {/* MOBILE: Logo di kiri, DESKTOP: sm:flex-row-reverse (Logo di kanan) */}
-        <div className="flex items-center w-full sm:w-2/5 justify-start sm:justify-end gap-3 sm:flex-row-reverse">
+        {/* sm:w-2/5 untuk memberikan ruang bagi nama tim di desktop */}
+        <div className="flex items-center gap-3 w-auto sm:w-2/5 justify-start">
           {team1?.logo_url ? (
             <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 object-contain" />
           ) : (
             <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
-          <span className="font-bold text-white text-left sm:text-right truncate">{team1?.name}</span>
+          {/* NAMA TIM: hidden di mobile, sm:block untuk desktop */}
+          <span className="font-bold text-white text-left truncate hidden sm:block">{team1?.name}</span>
         </div>
 
         {/* Skor atau VS */}
-        {/* Margin vertikal di mobile, horizontal di desktop */}
-        <div className="text-center my-2 sm:my-0">
+        <div className="text-center flex-shrink-0">
           {isFinished ? (
             <span className="font-bold text-xl sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
           ) : (
-            <div className="bg-slate-700/50 rounded-full w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-300">
-                vs
-            </div>
+            <span className="text-sm font-normal text-slate-400">vs</span>
           )}
         </div>
 
         {/* Tim 2 */}
-        {/* MOBILE: Logo di kiri, DESKTOP: tetap di kiri */}
-        <div className="flex items-center w-full sm:w-2/5 justify-start gap-3">
+        {/* sm:w-2/5 untuk memberikan ruang bagi nama tim di desktop */}
+        <div className="flex items-center gap-3 w-auto sm:w-2/5 justify-end">
+          {/* NAMA TIM: hidden di mobile, sm:block untuk desktop */}
+          <span className="font-bold text-white text-right truncate hidden sm:block">{team2?.name}</span>
           {team2?.logo_url ? (
             <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 object-contain" />
           ) : (
             <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
-          <span className="font-bold text-white text-left truncate">{team2?.name}</span>
         </div>
       </div>
 
