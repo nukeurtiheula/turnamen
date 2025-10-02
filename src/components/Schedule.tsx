@@ -8,14 +8,14 @@ import SetTimeDialog from './SetTimeDialog';
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge'; // Import Badge dari shadcn/ui
-import { Clock, ShieldOff } from 'lucide-react'; // Import ikon
+import { Badge } from './ui/badge';
+import { Clock, ShieldOff } from 'lucide-react';
 
-// --- Definisi Tipe Data ---
+// --- Definisi Tipe Data (Tidak ada perubahan) ---
 interface Team {
   id: number;
   name: string;
-  logo_url: string | null; // Tambahkan logo_url
+  logo_url: string | null;
 }
 interface Match {
   id: number;
@@ -28,30 +28,23 @@ interface Match {
   teams: [Team, Team] | null;
 }
 
-// --- Fungsi Fetching Data (Sudah dimodifikasi) ---
+// --- Fungsi Fetching Data (Tidak ada perubahan) ---
 async function getMatchesWithTeams(): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
-    .select(`
-      *,
-      team1:team1_id(name, logo_url),
-      team2:team2_id(name, logo_url)
-    `)
+    .select(`*, team1:team1_id(name, logo_url), team2:team2_id(name, logo_url)`)
     .order('matchday')
     .order('id');
-    
   if (error) {
-    console.error("Error fetching matches:", error); // Tambahkan ini untuk debugging
+    console.error("Error fetching matches:", error);
     throw error;
   }
-  
-  // Sekarang data akan kembali dengan format { ..., team1: {name: '...'}, team2: {name: '...'} }
-  // Kita perlu menyesuaikan sedikit cara kita memetakannya
   return data.map(m => ({ ...m, teams: [m.team1 as Team, m.team2 as Team] })) as Match[];
 }
 
+
 // ========================================================================
-// KOMPONEN BARU: MatchCard
+// KOMPONEN MatchCard (DENGAN PENYESUAIAN MOBILE)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -64,52 +57,60 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
   const team2 = match.teams?.[1];
 
   return (
-    <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
-      {/* Header Kartu: Status & Waktu */}
+    // Padding lebih kecil di mobile
+    <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
+      {/* Header Kartu (Tidak banyak perubahan) */}
       <div className="flex justify-between items-center mb-3">
         <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
           {isFinished ? 'Selesai' : 'Akan Datang'}
         </Badge>
         {match.match_timestamp && (
           <div className="text-xs text-slate-400">
-            {format(parseISO(match.match_timestamp), 'dd MMM yyyy, HH:mm', { locale: id })}
+            {format(parseISO(match.match_timestamp), 'dd MMM, HH:mm', { locale: id })}
           </div>
         )}
       </div>
 
       {/* Konten Utama: Tim vs Tim */}
-      <div className="flex items-center justify-between gap-4">
+      {/* MOBILE: flex-col (ke bawah), DESKTOP: sm:flex-row (ke samping) */}
+      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+        
         {/* Tim 1 */}
-        <div className="flex items-center gap-3 w-2/5 justify-end">
-          <span className="font-bold text-white text-right truncate">{team1?.name}</span>
+        {/* MOBILE: Logo di kiri, DESKTOP: sm:flex-row-reverse (Logo di kanan) */}
+        <div className="flex items-center w-full sm:w-2/5 justify-start sm:justify-end gap-3 sm:flex-row-reverse">
           {team1?.logo_url ? (
             <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 object-contain" />
           ) : (
-            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
+          <span className="font-bold text-white text-left sm:text-right truncate">{team1?.name}</span>
         </div>
 
         {/* Skor atau VS */}
-        <div className="text-center">
+        {/* Margin vertikal di mobile, horizontal di desktop */}
+        <div className="text-center my-2 sm:my-0">
           {isFinished ? (
-            <span className="font-bold text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
+            <span className="font-bold text-xl sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
           ) : (
-            <span className="text-sm font-normal text-slate-400">vs</span>
+            <div className="bg-slate-700/50 rounded-full w-10 h-10 flex items-center justify-center text-sm font-normal text-slate-300">
+                vs
+            </div>
           )}
         </div>
 
         {/* Tim 2 */}
-        <div className="flex items-center gap-3 w-2/5">
+        {/* MOBILE: Logo di kiri, DESKTOP: tetap di kiri */}
+        <div className="flex items-center w-full sm:w-2/5 justify-start gap-3">
           {team2?.logo_url ? (
             <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 object-contain" />
           ) : (
-            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
+            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
           <span className="font-bold text-white text-left truncate">{team2?.name}</span>
         </div>
       </div>
 
-      {/* Tombol Aksi (jika belum selesai) */}
+      {/* Tombol Aksi (Tidak ada perubahan) */}
       {!isFinished && (
         <div className="mt-3 text-center border-t border-slate-700/50 pt-3">
           <Button
@@ -128,13 +129,15 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
 
 
 // ========================================================================
-// KOMPONEN UTAMA: Schedule
+// KOMPONEN UTAMA: Schedule (DENGAN PENYESUAIAN MOBILE)
 // ========================================================================
 const Schedule: React.FC = () => {
-    const { data: matches = [], isLoading } = useQuery<Match[]>({ queryKey: ['scheduleMatches'], queryFn: getMatchesWithTeams });
+    // ... Logika state dan query tidak berubah
+    const { data: matches = [], isLoading, isError, error } = useQuery<Match[]>({ queryKey: ['scheduleMatches'], queryFn: getMatchesWithTeams });
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
     if (isLoading) return <div className="p-4 text-center">Loading...</div>;
+    if (isError) return <div className="p-4 text-center text-red-500">Error: {error.message}</div>;
 
     const matchesByDay = matches.reduce((acc, match) => {
         const day = `Matchday ${match.matchday}`;
@@ -143,19 +146,25 @@ const Schedule: React.FC = () => {
         return acc;
     }, {} as Record<string, Match[]>);
 
+    if (matches.length === 0) {
+        return <div className="p-4 text-center text-slate-400">Belum ada jadwal pertandingan.</div>;
+    }
+
     return (
         <>
             <Accordion type="single" collapsible className="w-full space-y-4">
                 {Object.entries(matchesByDay).map(([day, dayMatches]) => (
                     <AccordionItem value={day} key={day} className="border border-slate-700/50 rounded-lg overflow-hidden bg-slate-900/30">
-                        <AccordionTrigger className="hover:no-underline py-3 px-4 transition-colors duration-200 hover:bg-slate-800/50">
+                        {/* Padding & Text size lebih kecil di mobile */}
+                        <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 transition-colors duration-200 hover:bg-slate-800/50">
                             <div className='flex justify-between w-full items-center'>
-                                <span className='font-bold text-lg text-white'>{day}</span>
-                                <span className='text-sm text-slate-400 font-normal mr-2'>{dayMatches.length} Pertandingan</span>
+                                <span className='font-bold text-md sm:text-lg text-white'>{day}</span>
+                                <span className='text-xs sm:text-sm text-slate-400 font-normal mr-2'>{dayMatches.length} Pertandingan</span>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="bg-slate-900/20">
-                            <div className="p-4 space-y-4">
+                            {/* Padding lebih kecil di mobile */}
+                            <div className="p-2 sm:p-4 space-y-4">
                                 {dayMatches.map(match => (
                                     <MatchCard key={match.id} match={match} onSetTimeClick={() => setSelectedMatch(match)} />
                                 ))}
