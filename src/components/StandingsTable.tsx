@@ -1,14 +1,17 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-// Pastikan definisi tipe ini ada
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+// Menambahkan ikon panah dan strip dari lucide-react
+import { Trophy, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+
+// --- Definisi Tipe (Tidak ada perubahan) ---
 interface Team { id: number; name: string; }
 interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
 interface StandingsEntry { team_id: number; team_name: string; mp: number; w: number; d: number; l: number; points: number; gf: number; ga: number; gd: number; }
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Trophy } from 'lucide-react';
 
-// Komponen baru untuk medali lingkaran
+
+// --- Komponen RankMedal (Tidak ada perubahan) ---
 const RankMedal = ({ rank }: { rank: number }) => {
   if (rank === 1) {
     return <Trophy className="h-5 w-5 text-yellow-400" />;
@@ -24,9 +27,23 @@ const RankMedal = ({ rank }: { rank: number }) => {
   return <span className="flex items-center justify-center w-6 h-6">{rank}</span>;
 };
 
+// --- Komponen BARU untuk Indikator Perubahan Peringkat ---
+const RankChangeIndicator = ({ oldRank, newRank }: { oldRank: number, newRank: number }) => {
+  // Jika tidak ada data peringkat lama, atau peringkatnya sama, tampilkan strip
+  if (oldRank === -1 || oldRank === newRank) {
+    return <Minus className="h-4 w-4 text-gray-500" />;
+  }
+  // Jika peringkat baru lebih baik (lebih kecil), tampilkan panah ke atas
+  if (newRank < oldRank) {
+    return <ArrowUp className="h-4 w-4 text-green-500" />;
+  }
+  // Jika peringkat baru lebih buruk (lebih besar), tampilkan panah ke bawah
+  return <ArrowDown className="h-4 w-4 text-red-500" />;
+};
 
+
+// --- Fungsi fetchData dan calculateStandings (Tidak ada perubahan) ---
 async function fetchData(): Promise<{ teams: Team[], matches: Match[] }> {
-    // ... (fungsi sama seperti sebelumnya)
     const { data: teams, error: teamsError } = await supabase.from('teams').select('*');
     if (teamsError) throw new Error(teamsError.message);
     const { data: matches, error: matchesError } = await supabase.from('matches').select('*');
@@ -35,7 +52,6 @@ async function fetchData(): Promise<{ teams: Team[], matches: Match[] }> {
 }
 
 function calculateStandings(teams: Team[], matches: Match[]): StandingsEntry[] {
-    // ... (fungsi sama seperti sebelumnya)
     const stats = new Map<number, StandingsEntry>(teams.map(t => [t.id, { team_id: t.id, team_name: t.name, mp: 0, w: 0, d: 0, l: 0, points: 0, gf: 0, ga: 0, gd: 0 }]));
     matches.forEach(m => {
         if (m.score1 === null || m.score2 === null) return;
@@ -54,15 +70,32 @@ function calculateStandings(teams: Team[], matches: Match[]): StandingsEntry[] {
     return Array.from(stats.values()).sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
 }
 
+
+// --- Komponen Utama StandingsTable (Dengan Perubahan) ---
 const StandingsTable: React.FC = () => {
-    // ... (logika hook sama seperti sebelumnya)
     const queryClient = useQueryClient();
     const { data, isLoading } = useQuery({ queryKey: ['standingsData'], queryFn: fetchData });
+    
+    // PERUBAHAN: State untuk menyimpan klasemen sebelumnya
+    const [previousStandings, setPreviousStandings] = useState<StandingsEntry[]>([]);
+
+    // Logika subscription realtime (Tidak ada perubahan)
     useEffect(() => {
         const channel = supabase.channel('realtime-matches').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => { queryClient.invalidateQueries({ queryKey: ['standingsData'] }); }).subscribe();
         return () => { supabase.removeChannel(channel); };
     }, [queryClient]);
+
+    // Kalkulasi klasemen saat ini (Tidak ada perubahan)
     const standings = useMemo(() => data ? calculateStandings(data.teams, data.matches) : [], [data]);
+
+    // PERUBAHAN: useEffect untuk menyimpan klasemen saat ini ke 'previousStandings'
+    // Ini akan berjalan SETELAH render selesai, sehingga pada render berikutnya,
+    // 'previousStandings' akan berisi data dari render yang lalu.
+    useEffect(() => {
+        if (standings.length > 0) {
+            setPreviousStandings(standings);
+        }
+    }, [standings]);
 
     if (isLoading) return <div className="p-4 text-center">Loading...</div>;
 
@@ -71,11 +104,10 @@ const StandingsTable: React.FC = () => {
             <Table>
                 <TableHeader>
                     <TableRow className="border-b border-gray-800 bg-zinc-700">
-                        <TableHead className="text-center">Rank</TableHead>
+                        <TableHead className="text-center w-[100px]">Rank</TableHead>
                         <TableHead>Tim</TableHead>
                         <TableHead className="text-center">MP</TableHead>
                         <TableHead className="text-center">W</TableHead>
-                        {/* INI YANG DITAMBAHKAN */}
                         <TableHead className="text-center">D</TableHead>
                         <TableHead className="text-center">L</TableHead>
                         <TableHead className="text-center">Poin</TableHead>
@@ -84,22 +116,30 @@ const StandingsTable: React.FC = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {standings.map((team, index) => (
-                        <TableRow key={team.team_id} className="border-slate-800">
-                            <TableCell className="font-medium text-center">
-                              <RankMedal rank={index + 1} />
-                            </TableCell>
-                            <TableCell className="font-semibold">{team.team_name}</TableCell>
-                            <TableCell className="text-center">{team.mp}</TableCell>
-                            <TableCell className="text-center text-green-500">{team.w}</TableCell>
-                            {/* INI YANG DITAMBAHKAN */}
-                            <TableCell className="text-center text-gray-400">{team.d}</TableCell>
-                            <TableCell className="text-center text-red-500">{team.l}</TableCell>
-                            <TableCell className="text-center font-bold text-lg">{team.points}</TableCell>
-                            <TableCell className="text-center">{team.mp > 0 ? `${team.gf}-${team.ga}` : '0-0'}</TableCell>
-                            <TableCell className="text-center font-semibold">{team.mp > 0 ? (team.gd > 0 ? `+${team.gd}` : team.gd) : 0}</TableCell>
-                        </TableRow>
-                    ))}
+                    {standings.map((team, index) => {
+                        // PERUBAHAN: Cari peringkat lama tim ini
+                        const oldRank = previousStandings.findIndex(prevTeam => prevTeam.team_id === team.team_id);
+                        
+                        return (
+                            <TableRow key={team.team_id} className="border-slate-800">
+                                <TableCell className="font-medium">
+                                  {/* PERUBAHAN: Tampilkan rank medal dan indikator berdampingan */}
+                                  <div className="flex items-center justify-center gap-2">
+                                    <RankMedal rank={index + 1} />
+                                    <RankChangeIndicator oldRank={oldRank} newRank={index} />
+                                  </div>
+                                </TableCell>
+                                <TableCell className="font-semibold">{team.team_name}</TableCell>
+                                <TableCell className="text-center">{team.mp}</TableCell>
+                                <TableCell className="text-center text-green-500">{team.w}</TableCell>
+                                <TableCell className="text-center text-gray-400">{team.d}</TableCell>
+                                <TableCell className="text-center text-red-500">{team.l}</TableCell>
+                                <TableCell className="text-center font-bold text-lg">{team.points}</TableCell>
+                                <TableCell className="text-center">{team.mp > 0 ? `${team.gf}-${team.ga}` : '0-0'}</TableCell>
+                                <TableCell className="text-center font-semibold">{team.mp > 0 ? (team.gd > 0 ? `+${team.gd}` : team.gd) : 0}</TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>
