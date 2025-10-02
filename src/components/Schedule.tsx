@@ -45,7 +45,7 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 
 // GANTI LAGI KOMPONEN MatchCard DENGAN VERSI FINAL INI
 // ========================================================================
-// KOMPONEN MatchCard (DYNAMIC WIDTH FOR SCORE)
+// KOMPONEN MatchCard (SYMMETRICAL & PROPORTIONAL LAYOUT)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -60,7 +60,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
   return (
     <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
       {/* Header Kartu (Tidak ada perubahan) */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-4">
         <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
           {isFinished ? 'Selesai' : 'Akan Datang'}
         </Badge>
@@ -71,38 +71,30 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
         )}
       </div>
 
-      {/* Konten Utama: Tim vs Tim */}
-      {/* LOGIKA KONDISIONAL BARU: justify-center vs justify-between */}
-      <div className={`flex items-center gap-2 sm:gap-4 ${isFinished ? 'justify-between' : 'justify-center'}`}>
+      {/* Konten Utama: Layout Tiga Kolom yang Stabil */}
+      <div className="flex items-center">
         
-        {/* Tim 1 */}
-        {/* LOGIKA KONDISIONAL BARU: w-auto vs w-1/3 */}
-        <div className={`flex items-center gap-2 sm:gap-3 ${isFinished ? 'w-1/3' : 'w-auto'} justify-end ${!isFinished && 'flex-row-reverse'}`}>
+        {/* Kolom 1: Tim 1 (Fleksibel) */}
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
+          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
           {team1?.logo_url ? (
             <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
           ) : (
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
           )}
-          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
         </div>
 
-        {/* Skor atau VS */}
-        {/* LOGIKA KONDISIONAL BARU: Menambah lebar saat skor muncul */}
-        <div className={`text-center flex-shrink-0 ${isFinished ? 'w-1/3' : 'w-auto px-2'}`}>
+        {/* Kolom 2: Skor atau VS (Lebar Tetap) */}
+        <div className="flex justify-center items-center w-16 sm:w-24 flex-shrink-0">
           {isFinished ? (
-            <div className='flex justify-center items-center gap-2 sm:gap-4'>
-                <span className="font-bold text-2xl sm:text-3xl text-white tracking-wider">{match.score1}</span>
-                <span className='text-slate-400 text-sm'>-</span>
-                <span className="font-bold text-2xl sm:text-3xl text-white tracking-wider">{match.score2}</span>
-            </div>
+            <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
           ) : (
             <span className="text-sm font-normal text-slate-400">vs</span>
           )}
         </div>
 
-        {/* Tim 2 */}
-        {/* LOGIKA KONDISIONAL BARU: w-auto vs w-1/3 */}
-        <div className={`flex items-center gap-2 sm:gap-3 ${isFinished ? 'w-1/3' : 'w-auto'} justify-start`}>
+        {/* Kolom 3: Tim 2 (Fleksibel) */}
+        <div className="flex flex-1 items-center justify-start gap-2 sm:gap-3 min-w-0">
           {team2?.logo_url ? (
             <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
           ) : (
@@ -114,7 +106,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
 
       {/* Tombol Aksi (Tidak ada perubahan) */}
       {!isFinished && (
-        <div className="mt-3 text-center border-t border-slate-700/50 pt-3">
+        <div className="mt-4 text-center border-t border-slate-700/50 pt-3">
           <Button
             variant="ghost"
             className="text-slate-400 h-auto p-2 text-xs hover:text-white transition-colors duration-200"
