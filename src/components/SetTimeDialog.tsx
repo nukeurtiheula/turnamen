@@ -1,6 +1,5 @@
 // src/components/SetTimeDialog.tsx
 
-// --- Semua import dan definisi tipe tetap sama ---
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -9,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ShieldOff } from 'lucide-react';
+
+// --- Definisi Tipe Data ---
 interface Team { id: number; name: string; logo_url: string | null; }
 interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
 interface SetTimeDialogProps { match: Match | null; isOpen: boolean; onClose: () => void; }
@@ -33,16 +34,13 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
   const team1 = match.teams?.[0];
   const team2 = match.teams?.[1];
 
-  // ==========================================================
-  // PERUBAHAN DI SINI: Pisahkan logika async ke fungsi sendiri
-  // ==========================================================
   const handleSave = async () => {
     if (!match) return;
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from('matches')
-        .update({ match_timestamp: matchTime || null }) // Gunakan null jika matchTime kosong
+        .update({ match_timestamp: matchTime || null })
         .eq('id', match.id);
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
@@ -60,19 +58,18 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
     try {
       const { error } = await supabase
         .from('matches')
-        .update({ match_timestamp: null }) // Simpan null ke database
+        .update({ match_timestamp: null })
         .eq('id', match.id);
       if (error) throw error;
-      setMatchTime(''); // Juga reset state lokal
+      setMatchTime('');
       await queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
-      onClose(); // Tutup dialog setelah reset berhasil
+      onClose();
     } catch (error) {
       console.error('Error resetting match time:', error);
     } finally {
       setIsSaving(false);
     }
   };
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,19 +81,14 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
           </DialogDescription>
         </DialogHeader>
 
-        {/* --- Visual Konteks Pertandingan (Tidak ada perubahan) --- */}
         <div className="flex items-center justify-center gap-4 py-4">
           <div className="flex items-center gap-2"><span className="font-semibold text-sm">{team1?.name}</span>{team1?.logo_url ? (<img src={team1.logo_url} alt={team1.name} className="w-6 h-6 object-contain" />) : (<div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-3 h-3 text-slate-400" /></div>)}</div>
           <span className="text-slate-400">vs</span>
           <div className="flex items-center gap-2">{team2?.logo_url ? (<img src={team2.logo_url} alt={team2.name} className="w-6 h-6 object-contain" />) : (<div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-3 h-3 text-slate-400" /></div>)}<span className="font-semibold text-sm">{team2?.name}</span></div>
         </div>
 
-        {/* --- Form Input (Tidak ada perubahan) --- */}
         <div className="grid gap-2"><Label htmlFor="match-time" className="text-left text-slate-300">Tanggal & Waktu</Label><Input id="match-time" type="datetime-local" value={matchTime} onChange={(e) => setMatchTime(e.target.value)} className="col-span-3 bg-slate-800/50 border-slate-700 focus-visible:ring-slate-500" /></div>
         
-        {/* ========================================================== */}
-        {/* PERUBAHAN DI SINI: Panggil fungsi yang sudah dipisah */}
-        {/* ========================================================== */}
         <DialogFooter>
           <div className="flex w-full justify-end gap-2">
             <Button variant="destructive" onClick={handleReset} disabled={isSaving}>
