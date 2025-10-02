@@ -12,6 +12,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
-
-// TAMBAHKAN KOMENTAR SEPERTI INI
-// Test commit untuk refresh folder src
