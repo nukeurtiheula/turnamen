@@ -1,6 +1,6 @@
 // src/components/SetTimeDialog.tsx
 
-import React, { useRef } from 'react';
+import React from 'react'; // Hapus useRef karena tidak dipakai
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 // Definisi tipe lokal untuk bypass
@@ -10,7 +10,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from './ui/dialog';
-import { Form } from './ui/form';
+import { Form } from './ui/form'; // Komponen Form tetap diimpor
 
 interface SetTimeDialogProps {
   match: Match;
@@ -20,7 +20,7 @@ interface SetTimeDialogProps {
 
 const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose }) => {
   const queryClient = useQueryClient();
-  const formRef = useRef<HTMLFormElement>(null);
+  // const formRef = useRef<HTMLFormElement>(null); // <--- DIHAPUS
 
   const setTimeMutation = useMutation({
     mutationFn: async (isoTimestamp: string | null) => {
@@ -55,13 +55,11 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
         alert("Format tanggal tidak valid.");
       }
     } else {
-      // Jika input dikosongkan, kirim null untuk mereset
       setTimeMutation.mutate(null);
     }
   };
 
   const handleReset = () => {
-    // Panggil mutasi dengan nilai null untuk mereset waktu
     setTimeMutation.mutate(null);
   };
 
@@ -82,7 +80,8 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
           <DialogDescription>{match.teams?.[0].name} vs {match.teams?.[1].name}</DialogDescription>
         </DialogHeader>
         
-        <Form ref={formRef} onSubmit={handleSubmit}>
+        {/* 'ref' DIHAPUS DARI SINI */}
+        <Form onSubmit={handleSubmit}>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="datetime" className="text-right">Waktu</Label>
             <Input
@@ -94,7 +93,6 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
             />
           </div>
           <DialogFooter className="mt-4 justify-between">
-            {/* TOMBOL RESET BARU */}
             <Button type="button" variant="destructive" onClick={handleReset} disabled={setTimeMutation.isPending}>
               Reset Waktu
             </Button>
