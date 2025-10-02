@@ -95,7 +95,7 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
           </DialogDescription>
         </DialogHeader>
 
-        {/* Visual Konteks Pertandingan */}
+        {/* Visual Konteks Pertandingan (Tidak ada perubahan) */}
         <div className="flex items-center justify-center gap-4 py-4">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">{team1?.name}</span>
@@ -116,7 +116,7 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
           </div>
         </div>
 
-        {/* Form Input */}
+        {/* Form Input (Tidak ada perubahan) */}
         <div className="grid gap-2">
           <Label htmlFor="match-time" className="text-left text-slate-300">
             Tanggal & Waktu
@@ -130,16 +130,51 @@ const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose })
           />
         </div>
 
+        {/* ========================================================== */}
+        {/* PERUBAHAN DI SINI: DialogFooter dan Tombol Reset */}
+        {/* ========================================================== */}
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Batal</Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-          </Button>
+          <div className="flex w-full justify-end gap-2">
+            <Button 
+              variant="destructive" 
+              onClick={async () => {
+                // Set state ke kosong, lalu panggil handleSave untuk menyimpan null ke DB
+                setMatchTime('');
+                // Kita panggil handleSave secara langsung di sini dengan asumsi
+                // state matchTime akan terupdate sebelum handleSave berjalan.
+                // Untuk kepastian, kita bisa membuat fungsi handleReset terpisah
+                // atau langsung panggil supabase update di sini.
+                // Mari kita buat fungsi handleReset agar lebih bersih.
+                
+                // --- Logika Reset ---
+                setIsSaving(true);
+                try {
+                  const { error } = await supabase
+                    .from('matches')
+                    .update({ match_timestamp: null }) // Simpan null ke database
+                    .eq('id', match.id);
+                  if (error) throw error;
+                  await queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
+                  onClose(); // Tutup dialog setelah reset berhasil
+                } catch (error) {
+                  console.error('Error resetting match time:', error);
+                } finally {
+                  setIsSaving(false);
+                }
+              }} 
+              disabled={isSaving}
+            >
+              Reset
+            </Button>
+            
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
 
 export default SetTimeDialog;
