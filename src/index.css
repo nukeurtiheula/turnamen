@@ -3,15 +3,6 @@
 @tailwind utilities;
 
 
-@layer utilities {
-  .animate-fire-text {
-    @apply animate-fire-text;
-  }
-  .animate-fire-flicker {
-    @apply animate-fire-flicker;
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
