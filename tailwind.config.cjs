@@ -81,9 +81,6 @@ module.exports = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-        // ======================================================
-        // ===== DAN INI JUGA YANG HILANG 👇 =====
-        // ======================================================
         "fade-in": "fade-in 0.2s ease-out",
         "zoom-in-95": "zoom-in-95 0.2s ease-out",
   		}
