@@ -111,7 +111,7 @@ const LineupDisplay: React.FC<LineupDisplayProps> = ({ team1, team2 }) => {
 
 
 // ========================================================================
-// KOMPONEN MatchCard (Tidak ada perubahan di sini)
+// KOMPONEN MatchCard (DENGAN EFEK HOVER API MERAH)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
@@ -125,42 +125,56 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick, lineupTrig
   const team2 = match.teams?.[1];
 
   return (
-    <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
-      <div className="flex justify-between items-center mb-2">
-        <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
-          {isFinished ? 'Selesai' : 'Akan Datang'}
-        </Badge>
-        {lineupTrigger}
+    // <-- PERUBAHAN EFEK GLOW API DI SINI
+    <div className="relative p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all duration-300 group hover:border-red-500/50 hover:shadow-[0_0_5px_rgba(255,165,0,0.7),_0_0_15px_rgba(220,38,38,0.5),_0_0_25px_rgba(153,27,27,0.3)]">
+      
+      {/* Background Pattern (bisa dibiarkan atau dihapus jika dirasa terlalu ramai) */}
+      <div className="absolute inset-0 rounded-lg bg-slate-800/60 bg-[radial-gradient(#3e4c6a_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+      
+      {/* Konten ditaruh di atas pattern */}
+      <div className="relative z-10">
+        <div className="flex justify-between items-center mb-2">
+          <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
+            {isFinished ? 'Selesai' : 'Akan Datang'}
+          </Badge>
+          {lineupTrigger}
+        </div>
+
+        {match.match_timestamp && (
+          <div className="text-center text-xs text-slate-400 mb-3">
+            {format(parseISO(match.match_timestamp), 'eeee, dd MMMM yyyy - HH:mm', { locale: id })}
+          </div>
+        )}
+
+        <div className="flex items-center">
+          <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
+            <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
+            {team1?.logo_url ? <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
+          </div>
+          
+          <div className="flex justify-center items-center w-16 sm:w-24 flex-shrink-0">
+            {isFinished ? (
+              <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
+            ) : (
+              <span className="text-sm font-normal text-slate-400">vs</span>
+            )}
+          </div>
+
+          <div className="flex flex-1 items-center justify-start gap-2 sm:gap-3 min-w-0">
+            {team2?.logo_url ? <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
+            <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team2?.name}</span>
+          </div>
+        </div>
+
+        {!isFinished && (
+          <div className="mt-4 text-center border-t border-slate-700/50 pt-3">
+            <Button variant="ghost" className="text-slate-400 h-auto p-2 text-xs hover:text-white transition-colors duration-200" onClick={onSetTimeClick}>
+              <Clock className="w-4 h-4 mr-2" />
+              {match.match_timestamp ? 'Ubah Waktu' : 'Atur Waktu Pertandingan'}
+            </Button>
+          </div>
+        )}
       </div>
-
-      {match.match_timestamp && (
-        <div className="text-center text-xs text-slate-400 mb-3">
-          {format(parseISO(match.match_timestamp), 'eeee, dd MMMM yyyy - HH:mm', { locale: id })}
-        </div>
-      )}
-
-      <div className="flex items-center">
-        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
-          <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
-          {team1?.logo_url ? <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
-        </div>
-        <div className="flex justify-center items-center w-16 sm:w-24 flex-shrink-0">
-          {isFinished ? <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span> : <span className="text-sm font-normal text-slate-400">vs</span>}
-        </div>
-        <div className="flex flex-1 items-center justify-start gap-2 sm:gap-3 min-w-0">
-          {team2?.logo_url ? <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
-          <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team2?.name}</span>
-        </div>
-      </div>
-
-      {!isFinished && (
-        <div className="mt-4 text-center border-t border-slate-700/50 pt-3">
-          <Button variant="ghost" className="text-slate-400 h-auto p-2 text-xs hover:text-white transition-colors duration-200" onClick={onSetTimeClick}>
-            <Clock className="w-4 h-4 mr-2" />
-            {match.match_timestamp ? 'Ubah Waktu' : 'Atur Waktu Pertandingan'}
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
