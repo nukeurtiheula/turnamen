@@ -4,19 +4,22 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import SetTimeDialog from './SetTimeDialog';
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Clock, ShieldOff } from 'lucide-react';
+import { Clock, ShieldOff, ChevronDown } from 'lucide-react';
 
-// --- Definisi Tipe Data (Tidak ada perubahan) ---
+// --- Definisi Tipe Data (Disederhanakan) ---
 interface Team {
   id: number;
   name: string;
   logo_url: string | null;
+  players_list: string[] | null; // <-- PERUBAHAN: Array of strings
 }
+
 interface Match {
   id: number;
   matchday: number;
@@ -28,11 +31,15 @@ interface Match {
   teams: [Team, Team] | null;
 }
 
-// --- Fungsi Fetching Data (Tidak ada perubahan) ---
+// --- Fungsi Fetching Data (Disederhanakan) ---
 async function getMatchesWithTeams(): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
-    .select(`*, team1:team1_id(name, logo_url), team2:team2_id(name, logo_url)`)
+    .select(`
+      *, 
+      team1:team1_id(name, logo_url, players_list), 
+      team2:team2_id(name, logo_url, players_list)
+    `) // <-- Query lebih simpel
     .order('matchday')
     .order('id');
   if (error) {
@@ -43,81 +50,93 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 }
 
 
-// GANTI LAGI KOMPONEN MatchCard DENGAN VERSI FINAL INI
 // ========================================================================
-// KOMPONEN MatchCard (CENTERED DATE WITH DAY NAME)
+// KOMPONEN: LineupDisplay (DIPERBARUI)
+// ========================================================================
+interface LineupDisplayProps {
+  team1: Team | undefined;
+  team2: Team | undefined;
+}
+
+const LineupDisplay: React.FC<LineupDisplayProps> = ({ team1, team2 }) => {
+  const team1Players = team1?.players_list ?? []; // <-- Menggunakan players_list
+  const team2Players = team2?.players_list ?? []; // <-- Menggunakan players_list
+
+  const hasLineup = team1Players.length > 0 || team2Players.length > 0;
+
+  return (
+    <div className="bg-slate-900/50 p-3 sm:p-4 rounded-b-lg border-t border-slate-700">
+      {!hasLineup ? (
+        <p className="text-center text-sm text-slate-400">Line-up belum tersedia.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {/* Kolom Tim 1 */}
+          <div className="text-left">
+            <h4 className="font-bold text-white mb-2 text-sm">{team1?.name}</h4>
+            <ul className="space-y-1 text-xs text-slate-300">
+              {team1Players.length > 0 ? team1Players.map((name, index) => <li key={index}>{name}</li>) : <li>-</li>}
+            </ul>
+          </div>
+          {/* Kolom Tim 2 */}
+          <div className="text-right">
+            <h4 className="font-bold text-white mb-2 text-sm">{team2?.name}</h4>
+            <ul className="space-y-1 text-xs text-slate-300">
+              {team2Players.length > 0 ? team2Players.map((name, index) => <li key={index}>{name}</li>) : <li>-</li>}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+// ========================================================================
+// KOMPONEN MatchCard (Tidak ada perubahan di sini)
 // ========================================================================
 interface MatchCardProps {
   match: Match;
   onSetTimeClick: () => void;
+  lineupTrigger?: React.ReactNode;
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
+const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick, lineupTrigger }) => {
   const isFinished = match.score1 !== null && match.score2 !== null;
   const team1 = match.teams?.[0];
   const team2 = match.teams?.[1];
 
   return (
     <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50 transition-all hover:border-slate-600">
-      
-      {/* Header Kartu: Hanya berisi Badge Status */}
-      {/* Margin bottom dikurangi karena tanggal akan mengisi ruang */}
       <div className="flex justify-between items-center mb-2">
         <Badge variant={isFinished ? "secondary" : "default"} className={isFinished ? "bg-green-800/70 text-green-300 border-none" : "bg-blue-800/70 text-blue-300 border-none"}>
           {isFinished ? 'Selesai' : 'Akan Datang'}
         </Badge>
+        {lineupTrigger}
       </div>
 
-      {/* ============================================================ */}
-      {/* PERUBAHAN DI SINI: Tanggal dipindahkan ke tengah dan format diubah */}
-      {/* ============================================================ */}
       {match.match_timestamp && (
         <div className="text-center text-xs text-slate-400 mb-3">
           {format(parseISO(match.match_timestamp), 'eeee, dd MMMM yyyy - HH:mm', { locale: id })}
         </div>
       )}
 
-      {/* Konten Utama: Layout Tiga Kolom yang Stabil (Tidak ada perubahan) */}
       <div className="flex items-center">
-        
-        {/* Kolom 1: Tim 1 (Fleksibel) */}
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           <span className="font-bold text-white text-right truncate text-sm sm:text-base">{team1?.name}</span>
-          {team1?.logo_url ? (
-            <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
-          ) : (
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
-          )}
+          {team1?.logo_url ? <img src={team1.logo_url} alt={team1.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
         </div>
-
-        {/* Kolom 2: Skor atau VS (Lebar Tetap) */}
         <div className="flex justify-center items-center w-16 sm:w-24 flex-shrink-0">
-          {isFinished ? (
-            <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span>
-          ) : (
-            <span className="text-sm font-normal text-slate-400">vs</span>
-          )}
+          {isFinished ? <span className="font-bold text-lg sm:text-2xl text-white tracking-wider">{`${match.score1} - ${match.score2}`}</span> : <span className="text-sm font-normal text-slate-400">vs</span>}
         </div>
-
-        {/* Kolom 3: Tim 2 (Fleksibel) */}
         <div className="flex flex-1 items-center justify-start gap-2 sm:gap-3 min-w-0">
-          {team2?.logo_url ? (
-            <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" />
-          ) : (
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>
-          )}
+          {team2?.logo_url ? <img src={team2.logo_url} alt={team2.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0" /> : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0"><ShieldOff className="w-4 h-4 text-slate-400" /></div>}
           <span className="font-bold text-white text-left truncate text-sm sm:text-base">{team2?.name}</span>
         </div>
       </div>
 
-      {/* Tombol Aksi (Tidak ada perubahan) */}
       {!isFinished && (
         <div className="mt-4 text-center border-t border-slate-700/50 pt-3">
-          <Button
-            variant="ghost"
-            className="text-slate-400 h-auto p-2 text-xs hover:text-white transition-colors duration-200"
-            onClick={onSetTimeClick}
-          >
+          <Button variant="ghost" className="text-slate-400 h-auto p-2 text-xs hover:text-white transition-colors duration-200" onClick={onSetTimeClick}>
             <Clock className="w-4 h-4 mr-2" />
             {match.match_timestamp ? 'Ubah Waktu' : 'Atur Waktu Pertandingan'}
           </Button>
@@ -129,10 +148,43 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onSetTimeClick }) => {
 
 
 // ========================================================================
-// KOMPONEN UTAMA: Schedule (DENGAN PENYESUAIAN WARNA KONTEN)
+// KOMPONEN MatchWithLineup (Tidak ada perubahan di sini)
+// ========================================================================
+interface MatchWithLineupProps {
+  match: Match;
+  onSetTimeClick: () => void;
+}
+
+const MatchWithLineup: React.FC<MatchWithLineupProps> = ({ match, onSetTimeClick }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className="relative">
+        <MatchCard
+          match={match}
+          onSetTimeClick={onSetTimeClick}
+          lineupTrigger={
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700/50">
+                Line Up
+                <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          }
+        />
+      </div>
+      <CollapsibleContent>
+        <LineupDisplay team1={match.teams?.[0]} team2={match.teams?.[1]} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+
+// ========================================================================
+// KOMPONEN UTAMA: Schedule (Tidak ada perubahan di sini)
 // ========================================================================
 const Schedule: React.FC = () => {
-    // ... Logika state dan query tidak berubah ...
     const { data: matches = [], isLoading, isError, error } = useQuery<Match[]>({ queryKey: ['scheduleMatches'], queryFn: getMatchesWithTeams });
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
@@ -154,7 +206,6 @@ const Schedule: React.FC = () => {
         <>
             <Accordion type="single" collapsible className="w-full space-y-4">
                 {Object.entries(matchesByDay).map(([day, dayMatches]) => (
-                    // Warna dasar untuk seluruh item
                     <AccordionItem value={day} key={day} className="border border-slate-700/50 rounded-lg overflow-hidden bg-[#1c2026]">
                         <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 transition-colors duration-200 hover:bg-slate-800/50">
                             <div className='flex justify-between w-full items-center'>
@@ -162,14 +213,14 @@ const Schedule: React.FC = () => {
                                 <span className='text-sm text-slate-400 font-normal mr-2'>{dayMatches.length} Pertandingan</span>
                             </div>
                         </AccordionTrigger>
-                        
-                        {/* ================================================================== */}
-                        {/* PERUBAHAN DI SINI: Sesuaikan warna background konten */}
-                        {/* ================================================================== */}
                         <AccordionContent className="bg-black/20">
                             <div className="p-2 sm:p-4 space-y-4">
                                 {dayMatches.map(match => (
-                                    <MatchCard key={match.id} match={match} onSetTimeClick={() => setSelectedMatch(match)} />
+                                    <MatchWithLineup 
+                                        key={match.id} 
+                                        match={match} 
+                                        onSetTimeClick={() => setSelectedMatch(match)} 
+                                    />
                                 ))}
                             </div>
                         </AccordionContent>
