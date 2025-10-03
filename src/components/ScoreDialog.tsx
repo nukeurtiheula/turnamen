@@ -10,12 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { XCircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Tipe data yang konsisten
 interface Team { id: number; name: string; }
 interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
 
 interface ScoreDialogProps {
-  match: Match | null; // <-- Tipe sudah benar, bisa menerima null
+  match: Match | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -26,7 +25,6 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
   const [score2, setScore2] = useState('');
   
   useEffect(() => {
-    // Efek ini hanya berjalan jika ada match
     if (isOpen && match) {
         setScore1(match.score1?.toString() ?? '');
         setScore2(match.score2?.toString() ?? '');
@@ -35,15 +33,13 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
 
   const updateScoresMutation = useMutation({
     mutationFn: async (scores: { s1: number | null, s2: number | null }) => {
-      if (!match) throw new Error("Match tidak ditemukan untuk update"); // Penjaga tambahan
+      if (!match) throw new Error("Match tidak ditemukan untuk update");
       const { error } = await supabase.from('matches').update({ score1: scores.s1, score2: scores.s2 }).eq('id', match.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Skor berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: ['matches'] });
-      queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
-      queryClient.invalidateQueries({ queryKey: ['standingsData'] });
       onClose();
     },
     onError: (error) => toast.error(`Error: ${error.message}`),
@@ -70,23 +66,16 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(#4f5a73_1px,transparent_1px)] [background-size:16px_16px]"></div>
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="text-slate-50">Input/Edit Score</DialogTitle>
-          {/* Menggunakan optional chaining (?.) untuk keamanan ekstra */}
-          <DialogDescription className="text-slate-400">
-            {match.teams?.[0]?.name ?? 'Tim 1'} vs {match.teams?.[1]?.name ?? 'Tim 2'}
-          </DialogDescription>
+          <DialogDescription className="text-slate-400">{match.teams?.[0]?.name} vs {match.teams?.[1]?.name}</DialogDescription>
         </DialogHeader>
         <form id="score-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 grid gap-6">
           <div className="grid grid-cols-3 items-center gap-4">
-            <Label htmlFor="score1" className="text-right font-bold text-slate-200 truncate">
-              {match.teams?.[0]?.name}
-            </Label>
-            <Input id="score1" type="number" min="0" value={score1} onChange={(e) => setScore1(e.target.value)} className="col-span-2 h-12 bg-slate-800/70 border-slate-600 text-white text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-900" placeholder="0" />
+            <Label htmlFor="score1" className="text-right font-bold text-slate-200 truncate">{match.teams?.[0]?.name}</Label>
+            <Input id="score1" type="number" min="0" value={score1} onChange={(e) => setScore1(e.target.value)} className="col-span-2 h-12 bg-slate-800/70 border-slate-600" placeholder="0" />
           </div>
           <div className="grid grid-cols-3 items-center gap-4">
-            <Label htmlFor="score2" className="text-right font-bold text-slate-200 truncate">
-              {match.teams?.[1]?.name}
-            </Label>
-            <Input id="score2" type="number" min="0" value={score2} onChange={(e) => setScore2(e.target.value)} className="col-span-2 h-12 bg-slate-800/70 border-slate-600 text-white text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-900" placeholder="0" />
+            <Label htmlFor="score2" className="text-right font-bold text-slate-200 truncate">{match.teams?.[1]?.name}</Label>
+            <Input id="score2" type="number" min="0" value={score2} onChange={(e) => setScore2(e.target.value)} className="col-span-2 h-12 bg-slate-800/70 border-slate-600" placeholder="0" />
           </div>
         </form>
         <DialogFooter className="p-6 pt-4 flex-shrink-0 bg-slate-900/50 border-t border-slate-800">
