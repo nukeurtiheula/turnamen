@@ -51,12 +51,6 @@ module.exports = {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
   			},
-  			fontFamily: {
-  				sans: [
-  					'Inter',
-  					'sans-serif'
-  				]
-  			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',
@@ -70,28 +64,43 @@ module.exports = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+      // KITA GABUNGKAN KEYFRAMES DI SINI
   		keyframes: {
+        // Keyframes yang sudah ada (jangan dihapus)
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
+  			},
+        // Keyframes baru untuk efek api
+        "fire-text": {
+          "0%, 100%": { "background-size": "200% 200%", "background-position": "left center" },
+          "50%": { "background-size": "200% 200%", "background-position": "right center" },
+        },
+        "fire-flicker": {
+          "0%": { "text-shadow": "0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff8000, 0 0 30px #e00, 0 0 40px #e00, 0 0 55px #e00, 0 0 75px #e00" },
+          "25%": { "text-shadow": "0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffc800, 0 0 30px #ff8000, 0 0 40px #e00, 0 0 50px #e00, 0 0 60px #e00" },
+          "50%": { "text-shadow": "0 0 5px #fff, 0 0 15px #ffc800, 0 0 25px #ff8000, 0 0 35px #ff8000, 0 0 45px #e00, 0 0 55px #e00, 0 0 70px #e00" },
+          "75%": { "text-shadow": "0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffc800, 0 0 35px #ff8000, 0 0 40px #e00, 0 0 50px #e00, 0 0 65px #e00" },
+          "100%": { "text-shadow": "0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff8000, 0 0 30px #e00, 0 0 40px #e00, 0 0 55px #e00, 0 0 75px #e00" },
+        }
   		},
+      // KITA GABUNGKAN ANIMATION DI SINI
   		animation: {
+        // Animasi yang sudah ada (jangan dihapus)
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+        // Animasi baru untuk efek api
+        "fire-text": "fire-text 3s ease infinite",
+        "fire-flicker": "fire-flicker 2s linear infinite",
+  		},
+      // BONUS PERBAIKAN: fontFamily seharusnya di sini, bukan di dalam 'colors'
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
   	}
   },
   plugins: [require("tailwindcss-animate")],
