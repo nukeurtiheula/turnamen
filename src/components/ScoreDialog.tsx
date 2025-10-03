@@ -60,9 +60,6 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
     updateScoresMutation.mutate({ s1: finalScore1, s2: finalScore2 });
   };
 
-  // <-- ======================================================
-  // <-- ===== INI DIA PERBAIKAN PALING KRUSIAL 👇 =====
-  // <-- ======================================================
   if (!match) {
     return null;
   }
