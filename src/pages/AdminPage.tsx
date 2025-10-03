@@ -9,6 +9,7 @@ import { PencilIcon, CalendarClockIcon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 import SetTimeDialog from '../components/SetTimeDialog';
 import ScoreDialog from '../components/ScoreDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 
 // Tipe data yang konsisten
 interface Team {
@@ -87,12 +88,33 @@ const AdminPage: React.FC = () => {
 
     return (
         <div className="dark container mx-auto p-4 max-w-4xl">
-            <header className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Admin Panel</h1>
-                <Button asChild variant="outline"><Link to="/">Kembali ke Halaman Utama</Link></Button>
-            </header>
+  <header className="flex justify-between items-center mb-8">
+    <h1 className="text-3xl font-bold">Admin Panel</h1>
+    <Button asChild variant="outline"><Link to="/">Kembali ke Halaman Utama</Link></Button>
+  </header>
+  
+  {/* ====================================================== */}
+  {/* ===== TAMBAHKAN BLOK TES DIALOG INI DI SINI 👇 ===== */}
+  {/* ====================================================== */}
+  <div className="bg-green-900 border border-green-500 p-4 mb-4 rounded-lg">
+    <h2 className="text-white font-bold mb-2">TES KOMPONEN DIALOG</h2>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="destructive">KLIK SAYA UNTUK TES</Button>
+      </DialogTrigger>
+      <DialogContent className="bg-white text-black">
+        <DialogHeader>
+          <DialogTitle>JIKA INI MUNCUL, DIALOG BEKERJA</DialogTitle>
+        </DialogHeader>
+        <p className="py-4">
+          Ini adalah tes paling dasar untuk komponen Dialog.
+        </p>
+      </DialogContent>
+    </Dialog>
+  </div>
+  {/* ====================================================== */}
 
-            <Accordion type="single" collapsible className="w-full space-y-2">
+  <Accordion type="single" collapsible className="w-full space-y-2">    
                 {Object.entries(matchesByDay).map(([day, dayMatches]) => (
                     <AccordionItem value={day} key={day} className="border-none">
                         <AccordionTrigger className="bg-zinc-950 hover:bg-slate-800/50 text-slate-100 px-4 py-3 rounded-lg shadow-sm transition-all duration-300 hover:no-underline">
