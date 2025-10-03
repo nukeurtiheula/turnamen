@@ -114,7 +114,7 @@ const AdminPage: React.FC = () => {
                                             <Button variant="ghost" size="icon" className="transition-colors duration-200 hover:bg-slate-700" onClick={() => setTimeEditMatch(match)}>
                                                 <CalendarClockIcon className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="transition-colors duration-200 hover:bg-slate-700" onClick={() => setScoreEditMatch(match)}>
+                                            <Button variant="ghost" size="icon" className="transition-colors duration-200 hover:bg-slate-700" onClick={() => { console.log("--- TOMBOL SKOR DIKLIK! ---"); setScoreEditMatch(match); }} >
                                                 <PencilIcon className="h-4 w-4" />
                                             </Button>
                                         </div>
