@@ -1,104 +1,132 @@
 // src/components/SetTimeDialog.tsx
 
 import React, { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, ShieldOff } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { toast } from 'sonner';
 
-// --- Definisi Tipe Data ---
-interface Team { id: number; name: string; logo_url: string | null; }
-interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
-interface SetTimeDialogProps { match: Match | null; isOpen: boolean; onClose: () => void; }
+// Tipe data dari Schedule.tsx
+interface Team {
+  id: number;
+  name: string;
+  logo_url: string | null;
+}
+interface Match {
+  id: number;
+  teams: [Team, Team] | null;
+  match_timestamp: string | null;
+}
 
+interface SetTimeDialogProps {
+  match: Match | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const formatForInput = (date: Date): string => {
+  const pad = (num: number) => num.toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
 
 const SetTimeDialog: React.FC<SetTimeDialogProps> = ({ match, isOpen, onClose }) => {
-  const [matchTime, setMatchTime] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
+  const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (match && match.match_timestamp) {
-      const localTime = new Date(match.match_timestamp).toISOString().slice(0, 16);
-      setMatchTime(localTime);
+    if (isOpen && match?.match_timestamp) {
+      setSelectedDateTime(new Date(match.match_timestamp));
     } else {
-      setMatchTime('');
+      setSelectedDateTime(null);
     }
-  }, [match]);
+  }, [isOpen, match]);
+
+  const mutation = useMutation({
+    mutationFn: async (newTimestamp: string | null) => {
+      if (!match) throw new Error('Match not selected');
+      const { error } = await supabase
+        .from('matches')
+        .update({ match_timestamp: newTimestamp })
+        .eq('id', match.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Waktu pertandingan berhasil diperbarui!');
+      queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(`Gagal menyimpan: ${error.message}`);
+    },
+  });
+
+  const handleSave = () => {
+    if (selectedDateTime) {
+      mutation.mutate(selectedDateTime.toISOString());
+    }
+  };
+  
+  const handleReset = () => {
+    mutation.mutate(null);
+  };
 
   if (!match) return null;
 
   const team1 = match.teams?.[0];
   const team2 = match.teams?.[1];
 
-  const handleSave = async () => {
-    if (!match) return;
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('matches')
-        .update({ match_timestamp: matchTime || null })
-        .eq('id', match.id);
-      if (error) throw error;
-      await queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
-      onClose();
-    } catch (error) {
-      console.error('Error updating match time:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleReset = async () => {
-    if (!match) return;
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('matches')
-        .update({ match_timestamp: null })
-        .eq('id', match.id);
-      if (error) throw error;
-      setMatchTime('');
-      await queryClient.invalidateQueries({ queryKey: ['scheduleMatches'] });
-      onClose();
-    } catch (error) {
-      console.error('Error resetting match time:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-[#1c2026] border-slate-700">
+      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700">
         <DialogHeader>
-          <DialogTitle>Atur Waktu Pertandingan</DialogTitle>
-          <DialogDescription>
-            Pilih tanggal dan waktu untuk pertandingan ini.
-          </DialogDescription>
+          {/* // <-- PERUBAHAN WARNA DI SINI (Judul) */}
+          <DialogTitle className="text-slate-50">Atur Waktu Pertandingan</DialogTitle>
+          {/* // <-- PERUBAHAN WARNA DI SINI (Deskripsi) */}
+          <DialogDescription className="text-slate-300">Pilih tanggal dan waktu untuk pertandingan ini.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-center gap-4 py-4">
-          <div className="flex items-center gap-2"><span className="font-semibold text-sm">{team1?.name}</span>{team1?.logo_url ? (<img src={team1.logo_url} alt={team1.name} className="w-6 h-6 object-contain" />) : (<div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-3 h-3 text-slate-400" /></div>)}</div>
+        <div className="flex justify-center items-center gap-4 my-4">
+          {/* // <-- PERUBAHAN WARNA DI SINI (Nama Tim) */}
+          <span className="font-bold text-slate-100">{team1?.name}</span>
           <span className="text-slate-400">vs</span>
-          <div className="flex items-center gap-2">{team2?.logo_url ? (<img src={team2.logo_url} alt={team2.name} className="w-6 h-6 object-contain" />) : (<div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center"><ShieldOff className="w-3 h-3 text-slate-400" /></div>)}<span className="font-semibold text-sm">{team2?.name}</span></div>
+          {/* // <-- PERUBAHAN WARNA DI SINI (Nama Tim) */}
+          <span className="font-bold text-slate-100">{team2?.name}</span>
         </div>
 
-        <div className="grid gap-2"><Label htmlFor="match-time" className="text-left text-slate-300">Tanggal & Waktu</Label><Input id="match-time" type="datetime-local" value={matchTime} onChange={(e) => setMatchTime(e.target.value)} className="col-span-3 bg-slate-800/50 border-slate-700 focus-visible:ring-slate-500" /></div>
-        
-        <DialogFooter>
-          <div className="flex w-full justify-end gap-2">
-            <Button variant="destructive" onClick={handleReset} disabled={isSaving}>
-              Reset
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSaving ? 'Menyimpan...' : 'Simpan'}
-            </Button>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            {/* // <-- PERUBAHAN WARNA DI SINI (Label) */}
+            <label htmlFor="datetime" className="text-right text-slate-200">
+              Tanggal & Waktu
+            </label>
+            <Input
+              id="datetime"
+              type="datetime-local"
+              className="col-span-3 bg-slate-800 border-slate-600 text-white focus:ring-slate-500"
+              value={selectedDateTime ? formatForInput(selectedDateTime) : ''}
+              onChange={(e) => setSelectedDateTime(e.target.value ? new Date(e.target.value) : null)}
+            />
           </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="destructive" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button 
+            variant="default"
+            onClick={handleSave} 
+            disabled={!selectedDateTime || mutation.isPending}
+          >
+            {mutation.isPending ? 'Menyimpan...' : 'Simpan'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
