@@ -126,7 +126,7 @@ const AdminPage: React.FC = () => {
                 ))}
             </Accordion>
 
-            {/* Logika render dialog yang aman */}
+            {/* Logika render dialog yang aman dan benar */}
             <SetTimeDialog match={timeEditMatch} isOpen={!!timeEditMatch} onClose={() => setTimeEditMatch(null)} />
             <ScoreDialog match={scoreEditMatch} isOpen={!!scoreEditMatch} onClose={() => setScoreEditMatch(null)} />
         </div>

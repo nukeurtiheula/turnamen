@@ -15,7 +15,7 @@ interface Team { id: number; name: string; }
 interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
 
 interface ScoreDialogProps {
-  match: Match | null;
+  match: Match | null; // <-- PERBAIKAN PENTING: Bisa menerima null
   isOpen: boolean;
   onClose: () => void;
 }
@@ -59,36 +59,28 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
     updateScoresMutation.mutate({ s1: finalScore1, s2: finalScore2 });
   };
 
+  // <-- PERBAIKAN KRUSIAL: "Penjaga" untuk mencegah error saat render
   if (!match) {
     return null;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* // <-- PERUBAHAN 1: Membuat dialog menjadi flex container vertikal & membatasi tingginya */}
       <DialogContent className="relative flex flex-col max-h-[90vh] border-slate-700 bg-slate-900/80 backdrop-blur-sm overflow-hidden text-white p-0">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(#4f5a73_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        
-        {/* // <-- PERUBAHAN 2: Header tidak akan scroll */}
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="text-slate-50">Input/Edit Score</DialogTitle>
           <DialogDescription className="text-slate-400">
             {match.teams?.[0]?.name ?? 'Tim 1'} vs {match.teams?.[1]?.name ?? 'Tim 2'}
           </DialogDescription>
         </DialogHeader>
-        
-        {/* // <-- PERUBAHAN 3: Form menjadi area yang bisa scroll */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 grid gap-6">
+        <form id="score-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 grid gap-6">
           <div className="grid grid-cols-3 items-center gap-4">
             <Label htmlFor="score1" className="text-right font-bold text-slate-200 truncate">
               {match.teams?.[0]?.name}
             </Label>
             <Input 
-              id="score1" 
-              type="number" 
-              min="0" 
-              value={score1} 
-              onChange={(e) => setScore1(e.target.value)} 
+              id="score1" type="number" min="0" value={score1} onChange={(e) => setScore1(e.target.value)} 
               className="col-span-2 h-12 bg-slate-800/70 border-slate-600 text-white text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-900"
               placeholder="0"
             />
@@ -98,18 +90,12 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({ match, isOpen, onClose }) => 
               {match.teams?.[1]?.name}
             </Label>
             <Input 
-              id="score2" 
-              type="number" 
-              min="0" 
-              value={score2} 
-              onChange={(e) => setScore2(e.target.value)}
+              id="score2" type="number" min="0" value={score2} onChange={(e) => setScore2(e.target.value)}
               className="col-span-2 h-12 bg-slate-800/70 border-slate-600 text-white text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-900"
               placeholder="0"
             />
           </div>
         </form>
-        
-        {/* // <-- PERUBAHAN 4: Footer tidak akan scroll */}
         <DialogFooter className="p-6 pt-4 flex-shrink-0 bg-slate-900/50 border-t border-slate-800">
           <Button type="button" variant="destructive" onClick={() => updateScoresMutation.mutate({ s1: null, s2: null })} disabled={updateScoresMutation.isPending}>
             <XCircleIcon className="mr-2 h-4 w-4" /> Reset
