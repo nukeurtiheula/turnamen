@@ -51,7 +51,7 @@ async function getMatchesWithTeams(): Promise<Match[]> {
 
 
 // ========================================================================
-// KOMPONEN: LineupDisplay (DIPERBARUI)
+// KOMPONEN: LineupDisplay (VERSI BARU DENGAN LAYOUT SIMETRIS)
 // ========================================================================
 interface LineupDisplayProps {
   team1: Team | undefined;
@@ -59,8 +59,8 @@ interface LineupDisplayProps {
 }
 
 const LineupDisplay: React.FC<LineupDisplayProps> = ({ team1, team2 }) => {
-  const team1Players = team1?.players_list ?? []; // <-- Menggunakan players_list
-  const team2Players = team2?.players_list ?? []; // <-- Menggunakan players_list
+  const team1Players = team1?.players_list ?? [];
+  const team2Players = team2?.players_list ?? [];
 
   const hasLineup = team1Players.length > 0 || team2Players.length > 0;
 
@@ -69,19 +69,38 @@ const LineupDisplay: React.FC<LineupDisplayProps> = ({ team1, team2 }) => {
       {!hasLineup ? (
         <p className="text-center text-sm text-slate-400">Line-up belum tersedia.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Kolom Tim 1 */}
-          <div className="text-left">
-            <h4 className="font-bold text-white mb-2 text-sm">{team1?.name}</h4>
-            <ul className="space-y-1 text-xs text-slate-300">
-              {team1Players.length > 0 ? team1Players.map((name, index) => <li key={index}>{name}</li>) : <li>-</li>}
-            </ul>
+        // Wrapper utama untuk layout baru
+        <div className="w-full">
+
+          {/* Baris untuk Nama Tim */}
+          <div className="flex justify-between items-center mb-4 px-2 sm:px-4">
+            <h4 className="font-bold text-white text-sm w-2/5 text-left">{team1?.name}</h4>
+            <div className="w-1/5"></div> {/* Spacer */}
+            <h4 className="font-bold text-white text-sm w-2/5 text-right">{team2?.name}</h4>
           </div>
-          {/* Kolom Tim 2 */}
-          <div className="text-right">
-            <h4 className="font-bold text-white mb-2 text-sm">{team2?.name}</h4>
-            <ul className="space-y-1 text-xs text-slate-300">
-              {team2Players.length > 0 ? team2Players.map((name, index) => <li key={index}>{name}</li>) : <li>-</li>}
+
+          {/* Grid 3 Kolom untuk Player dan Ikon Pedang */}
+          <div className="grid grid-cols-3 items-start gap-2 sm:gap-4">
+            
+            {/* KOLOM 1: Pemain Tim 1 (Rata Kanan) */}
+            <ul className="space-y-1 text-xs text-slate-300 text-right">
+              {team1Players.length > 0 
+                ? team1Players.map((name, index) => <li key={index}>{name}</li>) 
+                : <li>-</li>
+              }
+            </ul>
+
+            {/* KOLOM 2: Ikon Pedang (Tengah) */}
+            <div className="flex justify-center items-center h-full pt-2">
+              <Swords className="w-6 h-6 sm:w-8 sm:h-8 text-slate-500" />
+            </div>
+
+            {/* KOLOM 3: Pemain Tim 2 (Rata Kiri) */}
+            <ul className="space-y-1 text-xs text-slate-300 text-left">
+              {team2Players.length > 0 
+                ? team2Players.map((name, index) => <li key={index}>{name}</li>) 
+                : <li>-</li>
+              }
             </ul>
           </div>
         </div>
