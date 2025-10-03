@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import SetTimeDialog from './SetTimeDialog';
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
