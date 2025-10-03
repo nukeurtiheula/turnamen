@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AdminPage from './pages/AdminPage';
-import 'sonner/dist/sonner.css';
 
 const App: React.FC = () => {
   return (
