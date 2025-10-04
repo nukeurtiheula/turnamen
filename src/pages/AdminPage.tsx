@@ -14,7 +14,7 @@ import ScoreDialog from '../components/ScoreDialog';
 interface Team { id: number; name: string; }
 interface Match { id: number; matchday: number; team1_id: number; team2_id: number; score1: number | null; score2: number | null; match_timestamp: string | null; teams: [Team, Team] | null; }
 
-const ADMIN_PASSWORD = 'ikhsan347'; // Ganti dengan password yang aman
+const ADMIN_PASSWORD = 'admin'; // Ganti dengan password yang aman
 
 async function getMatchesWithTeams(): Promise<Match[]> {
   const { data, error } = await supabase.from('matches').select(`*, team1:team1_id(name), team2:team2_id(name)`).order('matchday').order('id');
